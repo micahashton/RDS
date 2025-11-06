@@ -1,0 +1,126 @@
+# No changes was made from ChatGPT
+# Revision number
+# 11/5/2025
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Amazon Relational Database Service (RDS) Instance Template
+Resources:
+  RdsInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      VPCSecurityGroups:
+      - <SECURITY-GROUP-ID>
+      AllocatedStorage: '5'
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: playground-db
+      Engine: MySQL
+      MasterUsername: Admin
+      MasterUserPassword: CloudAcademy123!
+
+Parameters:
+  StudentID:
+    Type: String
+    Description: "Enter your ECPI Student ID (e.g., 123456)"
+    MinLength: 3
+
+Mappings:
+  RegionMap:
+    us-west-2:
+      AZ1: us-west-2a
+      AZ2: us-west-2b
+      AZ3: us-west-2c
+
+Resources:
+  # --- Create the VPC ---
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "VPC-${StudentID}"
+
+  # --- Create Public Subnets (1 per AZ) ---
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !FindInMap [RegionMap, us-west-2, AZ1]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "PublicSubnet1-${StudentID}"
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !FindInMap [RegionMap, us-west-2, AZ2]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "PublicSubnet2-${StudentID}"
+
+  PublicSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: !FindInMap [RegionMap, us-west-2, AZ3]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "PublicSubnet3-${StudentID}"
+
+  # --- Create Private Subnets (1 per AZ) ---
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.11.0/24
+      AvailabilityZone: !FindInMap [RegionMap, us-west-2, AZ1]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "PrivateSubnet1-${StudentID}"
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.12.0/24
+      AvailabilityZone: !FindInMap [RegionMap, us-west-2, AZ2]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "PrivateSubnet2-${StudentID}"
+
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.13.0/24
+      AvailabilityZone: !FindInMap [RegionMap, us-west-2, AZ3]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "PrivateSubnet3-${StudentID}"
+
+Outputs:
+  VPCId:
+    Description: "ID of the created VPC"
+    Value: !Ref MyVPC
+    Export:
+      Name: !Sub "${AWS::StackName}-VPCId"
+
+  PublicSubnets:
+    Description: "List of public subnet IDs"
+    Value: !Join [",", [!Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3]]
+
+  PrivateSubnets:
+    Description: "List of private subnet IDs"
+    Value: !Join [",", [!Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3]]
